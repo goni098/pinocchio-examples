@@ -1,0 +1,26 @@
+{
+	"name": "pinocchio-examples",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"clean": "biome check . --write --unsafe",
+		"program:gen": "rm -rf clinet && codama run --all && pnpm run clean"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.27.0",
+	"dependencies": {
+		"@solana/kit": "^5.3.0"
+	},
+	"devDependencies": {
+		"@codama/nodes-from-anchor": "^1.3.8",
+		"@codama/renderers-js": "^1.5.5",
+		"codama": "^1.5.0",
+		"@biomejs/biome": "2.3.11",
+		"@types/node": "^25.0.6",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
+	}
+}

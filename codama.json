@@ -1,0 +1,10 @@
+{
+	"idl": "idl/counter.json",
+	"before": [],
+	"scripts": {
+		"counter": {
+			"from": "@codama/renderers-js",
+			"args": ["client/counter"]
+		}
+	}
+}

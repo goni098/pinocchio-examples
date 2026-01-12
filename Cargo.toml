@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = ["basic/*"]
+
+[workspace.dependencies]
+pinocchio = "0.10.1"
+pinocchio-log = "0.5.1"
+pinocchio-pubkey = "0.3.0"
+pinocchio-system = "0.5.0"
+shank = "0.4.6"
+borsh = { version = "1.6.0", features = ["derive"] }
+solana-address = { version = "2.0.0", features = ["borsh", "curve25519"] }

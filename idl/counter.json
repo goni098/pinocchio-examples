@@ -1,0 +1,173 @@
+{
+	"version": "0.1.0",
+	"name": "counter",
+	"instructions": [
+		{
+			"name": "InitCounter",
+			"accounts": [
+				{
+					"name": "payer",
+					"isMut": false,
+					"isSigner": true
+				},
+				{
+					"name": "counter",
+					"isMut": true,
+					"isSigner": false
+				},
+				{
+					"name": "systemProgram",
+					"isMut": false,
+					"isSigner": false
+				}
+			],
+			"args": [
+				{
+					"name": "initCounter",
+					"type": {
+						"defined": "init_counter"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 0
+			}
+		},
+		{
+			"name": "IncreaseCounter",
+			"accounts": [
+				{
+					"name": "counter",
+					"isMut": true,
+					"isSigner": false
+				}
+			],
+			"args": [],
+			"discriminant": {
+				"type": "u8",
+				"value": 1
+			}
+		},
+		{
+			"name": "InitCounterAuhthority",
+			"accounts": [
+				{
+					"name": "payer",
+					"isMut": false,
+					"isSigner": true
+				},
+				{
+					"name": "counterAuthority",
+					"isMut": true,
+					"isSigner": false
+				},
+				{
+					"name": "systemProgram",
+					"isMut": false,
+					"isSigner": false
+				}
+			],
+			"args": [
+				{
+					"name": "initCounterAuthority",
+					"type": {
+						"defined": "init_counter_authority"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 2
+			}
+		},
+		{
+			"name": "IncreaseCounterAuthority",
+			"accounts": [
+				{
+					"name": "authority",
+					"isMut": false,
+					"isSigner": true
+				},
+				{
+					"name": "counterAuthority",
+					"isMut": true,
+					"isSigner": false
+				}
+			],
+			"args": [],
+			"discriminant": {
+				"type": "u8",
+				"value": 3
+			}
+		}
+	],
+	"accounts": [
+		{
+			"name": "Counter",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "bump",
+						"type": "u8"
+					},
+					{
+						"name": "count",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "CounterAuthority",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "authority",
+						"type": "Pubkey"
+					},
+					{
+						"name": "bump",
+						"type": "u8"
+					},
+					{
+						"name": "count",
+						"type": "u64"
+					}
+				]
+			}
+		}
+	],
+	"types": [
+		{
+			"name": "Params",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "count",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "Params",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "count",
+						"type": "u64"
+					}
+				]
+			}
+		}
+	],
+	"metadata": {
+		"origin": "shank",
+		"address": "8F1XtWR4wTs37nnutBvd2MWpCTfb7XAciFYkw5XHaENj"
+	}
+}

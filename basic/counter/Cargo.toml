@@ -1,0 +1,22 @@
+[package]
+name = "counter"
+version = "0.1.0"
+edition = "2021"
+
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+pinocchio = { workspace = true }
+pinocchio-log = { workspace = true }
+pinocchio-pubkey = { workspace = true }
+pinocchio-system = { workspace = true }
+shank = { workspace = true }
+borsh = { workspace = true }
+solana-address = { workspace = true }
+
+[dev-dependencies]
+litesvm = "0.9.0"
+solana-sdk = "3.0.0"
+solana-system-interface = "3.0.0"
