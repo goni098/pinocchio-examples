@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["basic/*"]
+members = ["basic/*", "crates/shared"]
 
 [workspace.dependencies]
 pinocchio = "0.10.1"
@@ -10,3 +10,4 @@ pinocchio-system = "0.5.0"
 shank = "0.4.6"
 borsh = { version = "1.6.0", features = ["derive"] }
 solana-address = { version = "2.0.0", features = ["borsh", "curve25519"] }
+base64 = "0.22"

@@ -604,6 +604,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "close-account"
+version = "0.1.0"
+
+[[package]]
 name = "combine"
 version = "3.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -635,10 +639,10 @@ dependencies = [
  "borsh",
  "litesvm",
  "pinocchio 0.10.1",
- "pinocchio-log",
  "pinocchio-pubkey",
  "pinocchio-system",
  "shank",
+ "shared",
  "solana-address 2.0.0",
  "solana-sdk",
  "solana-system-interface 3.0.0",
@@ -2074,6 +2078,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "shank_macro_impl",
+]
+
+[[package]]
+name = "shared"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "borsh",
+ "pinocchio 0.10.1",
+ "pinocchio-log",
 ]
 
 [[package]]

@@ -15,8 +15,6 @@ pub struct Params {
 }
 
 pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -> ProgramResult {
-    // check
-
     if program_id.as_array().ne(&ID) {
         return Err(ProgramError::IncorrectProgramId);
     }
@@ -42,8 +40,6 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
     if system_program.address().ne(&pinocchio_system::ID) {
         return Err(ProgramError::IncorrectProgramId);
     };
-
-    // execute
 
     let counter_data = Counter {
         bump,
@@ -76,6 +72,8 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
 
 #[cfg(test)]
 mod test {
+    extern crate std;
+
     use borsh::BorshDeserialize;
     use litesvm::LiteSVM;
     use pinocchio::Address;
@@ -122,8 +120,8 @@ mod test {
 
         let result = svm.send_transaction(tx).unwrap();
 
-        println!("Program executed successfully!");
-        println!("Transaction logs: {:#?}", result.logs);
+        std::println!("Program executed successfully!");
+        std::println!("Transaction logs: {:#?}", result.logs);
 
         let counter = svm.get_account(&counter).unwrap();
 

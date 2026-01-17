@@ -4,7 +4,7 @@
 	"scripts": {
 		"counter": {
 			"from": "@codama/renderers-js",
-			"args": ["client/counter"]
+			"args": ["js-client/counter"]
 		}
 	}
 }

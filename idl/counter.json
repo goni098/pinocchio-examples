@@ -126,7 +126,10 @@
 				"fields": [
 					{
 						"name": "authority",
-						"type": "Pubkey"
+						"type": {
+							"array": ["u8", 32]
+						},
+						"attrs": ["idl-type"]
 					},
 					{
 						"name": "bump",

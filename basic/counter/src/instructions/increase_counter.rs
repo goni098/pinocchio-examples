@@ -16,6 +16,12 @@ pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult 
         return Err(ProgramError::UninitializedAccount);
     }
 
+    let (pda, _) = Counter::derive();
+
+    if counter.address().ne(&pda) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
     let mut counter_data = Counter::try_from_slice(&counter.try_borrow()?)
         .map_err(|_| ProgramError::InvalidAccountData)?;
 
@@ -30,6 +36,8 @@ pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult 
 
 #[cfg(test)]
 mod test {
+    extern crate std;
+
     use borsh::BorshDeserialize;
     use litesvm::LiteSVM;
     use pinocchio::Address;
@@ -92,8 +100,8 @@ mod test {
 
         let result = svm.send_transaction(tx).unwrap();
 
-        println!("Program executed successfully!");
-        println!("Transaction logs: {:#?}", result.logs);
+        std::println!("Program executed successfully!");
+        std::println!("Transaction logs: {:#?}", result.logs);
 
         let counter = svm.get_account(&counter).unwrap();
 

@@ -19,7 +19,7 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    let [payer, counter_seed, system_program] = accounts else {
+    let [payer, counter_authority, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
@@ -29,11 +29,11 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
 
     let (pda, bump) = CounterAuthority::derive(payer.address());
 
-    if counter_seed.address().ne(&pda) {
+    if counter_authority.address().ne(&pda) {
         return Err(ProgramError::InvalidSeeds);
     }
 
-    if counter_seed.lamports().ne(&0) {
+    if counter_authority.lamports().ne(&0) {
         return Err(ProgramError::AccountAlreadyInitialized);
     }
 
@@ -61,7 +61,7 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
 
     CreateAccount {
         from: payer,
-        to: counter_seed,
+        to: counter_authority,
         lamports: lamports_required,
         space: account_span as u64,
         owner: program_id,
@@ -69,13 +69,15 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
     .invoke_signed(&[signers])?;
 
     counter_data
-        .serialize(&mut counter_seed.try_borrow_mut()?.as_mut())
+        .serialize(&mut counter_authority.try_borrow_mut()?.as_mut())
         .map_err(|_| ProgramError::InvalidAccountData)?;
 
     Ok(())
 }
 #[cfg(test)]
 mod test {
+    extern crate std;
+
     use borsh::BorshDeserialize;
     use litesvm::LiteSVM;
     use pinocchio::Address;
@@ -122,8 +124,8 @@ mod test {
 
         let result = svm.send_transaction(tx).unwrap();
 
-        println!("Program executed successfully!");
-        println!("Transaction logs: {:#?}", result.logs);
+        std::println!("Program executed successfully!");
+        std::println!("Transaction logs: {:#?}", result.logs);
 
         let counter = svm.get_account(&counter).unwrap();
 

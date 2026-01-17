@@ -1,4 +1,4 @@
-// #![no_std]
+#![no_std]
 #![allow(unexpected_cfgs)]
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -7,11 +7,11 @@ use pinocchio_pubkey::declare_id;
 use shank::ShankInstruction;
 
 use crate::instructions::{
-    increase_counter, increase_couter_authority, init_counter, init_counter_authority,
+    increase_counter, increase_counter_authority, init_counter, init_counter_authority,
 };
 
 mod accounts;
-mod error;
+mod events;
 mod instructions;
 
 entrypoint!(process);
@@ -54,7 +54,7 @@ pub fn process(
             init_counter_authority::process(program_id, accounts, params)
         }
         CounterInstruction::IncreaseCounterAuthority => {
-            increase_couter_authority::process(program_id, accounts)
+            increase_counter_authority::process(program_id, accounts)
         }
     }
 }

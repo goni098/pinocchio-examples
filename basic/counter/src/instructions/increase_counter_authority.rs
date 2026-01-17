@@ -1,11 +1,14 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use pinocchio::{error::ProgramError, AccountView, Address, ProgramResult};
+use shared::event::emit;
 
-use crate::{accounts::CounterAuthority, ID};
+use crate::{
+    accounts::CounterAuthority,
+    events::{CounterAuthorityIncreased, CounterEvent},
+    ID,
+};
 
 pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
-    // check
-
     if program_id.as_array().ne(&ID) {
         return Err(ProgramError::IncorrectProgramId);
     }
@@ -22,6 +25,12 @@ pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult 
         return Err(ProgramError::UninitializedAccount);
     }
 
+    let (pda, _) = CounterAuthority::derive(authority.address());
+
+    if counter.address().ne(&pda) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
     let mut counter_data = CounterAuthority::try_from_slice(&counter.try_borrow()?)
         .map_err(|_| ProgramError::InvalidAccountData)?;
 
@@ -29,19 +38,25 @@ pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult 
         return Err(ProgramError::IllegalOwner);
     }
 
-    // execute
-
     counter_data.count += 1;
 
     counter_data
         .serialize(&mut counter.try_borrow_mut()?.as_mut())
         .map_err(|_| ProgramError::InvalidAccountData)?;
 
+    let event = CounterEvent::CounterAuthorityIncreased(CounterAuthorityIncreased {
+        new_count: counter_data.count,
+    });
+
+    emit(&event)?;
+
     Ok(())
 }
 
 #[cfg(test)]
 mod test {
+    extern crate std;
+
     use borsh::BorshDeserialize;
     use litesvm::LiteSVM;
     use pinocchio::Address;
@@ -109,8 +124,8 @@ mod test {
 
         let result = svm.send_transaction(tx).unwrap();
 
-        println!("Program executed successfully!");
-        println!("Transaction logs: {:#?}", result.logs);
+        std::println!("Program executed successfully!");
+        std::println!("Transaction logs: {:#?}", result.logs);
 
         let counter = svm.get_account(&counter).unwrap();
 

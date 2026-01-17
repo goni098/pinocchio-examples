@@ -9,12 +9,13 @@ crate-type = ["lib", "cdylib"]
 
 [dependencies]
 pinocchio = { workspace = true }
-pinocchio-log = { workspace = true }
 pinocchio-pubkey = { workspace = true }
 pinocchio-system = { workspace = true }
 shank = { workspace = true }
 borsh = { workspace = true }
 solana-address = { workspace = true }
+
+shared = { path = "../../crates/shared" }
 
 [dev-dependencies]
 litesvm = "0.9.0"
