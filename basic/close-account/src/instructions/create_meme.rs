@@ -1,4 +1,4 @@
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshSerialize;
 use pinocchio::{
     cpi::{Seed, Signer},
     error::ProgramError,
@@ -7,15 +7,10 @@ use pinocchio::{
 };
 use pinocchio_system::instructions::CreateAccount;
 
-use crate::accounts::CounterAuthority;
+use crate::accounts::Meme;
 
-#[derive(BorshSerialize, BorshDeserialize)]
-pub struct Params {
-    pub count: u64,
-}
-
-pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -> ProgramResult {
-    let [payer, counter_authority, system_program] = accounts else {
+pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
+    let [payer, meme, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
@@ -23,13 +18,13 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    let (pda, bump) = CounterAuthority::derive(payer.address());
+    let (pda, bump) = Meme::derive();
 
-    if counter_authority.address().ne(&pda) {
+    if meme.address().ne(&pda) {
         return Err(ProgramError::InvalidSeeds);
     }
 
-    if counter_authority.lamports().ne(&0) {
+    if meme.lamports().ne(&0) || meme.data_len().ne(&0) {
         return Err(ProgramError::AccountAlreadyInitialized);
     }
 
@@ -37,39 +32,32 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
         return Err(ProgramError::IncorrectProgramId);
     };
 
-    let counter_data = CounterAuthority {
-        bump,
-        count: params.count,
-        authority: payer.address().clone(),
-    };
+    let meme_data = Meme { bump, address: pda };
 
-    let account_span = CounterAuthority::SPACE;
+    let account_span = Meme::SPACE;
     let lamports_required = Rent::get()?.minimum_balance_unchecked(account_span);
 
     let bump_bytes = &[bump];
-    let seeds = [
-        Seed::from(CounterAuthority::SEED_PREFIX),
-        Seed::from(payer.address().as_array()),
-        Seed::from(bump_bytes),
-    ];
+    let seeds = [Seed::from(Meme::SEED_PREFIX), Seed::from(bump_bytes)];
 
     let signers = Signer::from(&seeds);
 
     CreateAccount {
         from: payer,
-        to: counter_authority,
+        to: meme,
         lamports: lamports_required,
         space: account_span as u64,
         owner: program_id,
     }
     .invoke_signed(&[signers])?;
 
-    counter_data
-        .serialize(&mut counter_authority.try_borrow_mut()?.as_mut())
+    meme_data
+        .serialize(&mut meme.try_borrow_mut()?.as_mut())
         .map_err(|_| ProgramError::InvalidAccountData)?;
 
     Ok(())
 }
+
 #[cfg(test)]
 mod test {
     extern crate std;
@@ -82,29 +70,30 @@ mod test {
         signature::Keypair, signer::Signer, transaction::Transaction,
     };
 
-    use crate::{accounts::CounterAuthority, CounterInstruction, ID};
+    use crate::{accounts::Meme, CloseAccountInstruction, ID};
 
     #[test]
-    fn init_counter_authority() {
+    fn create_meme() {
         let mut svm = LiteSVM::new();
 
         let payer = Keypair::new();
 
         let program_id = Address::new_from_array(ID);
 
-        svm.add_program_from_file(program_id, "../../target/deploy/counter.so")
+        svm.add_program_from_file(program_id, "../../target/deploy/close_account.so")
             .unwrap();
+
         svm.airdrop(&payer.pubkey(), LAMPORTS_PER_SOL).unwrap();
 
-        let (counter, _) = CounterAuthority::derive(&payer.pubkey());
+        let (meme_addr, bump) = Meme::derive();
 
-        let ix_data = CounterInstruction::InitCounterAuhthority(super::Params { count: 19 });
+        let ix_data = CloseAccountInstruction::CreateMeme;
 
         let ix = Instruction {
             program_id,
             accounts: [
                 AccountMeta::new(payer.pubkey(), true),
-                AccountMeta::new(counter, false),
+                AccountMeta::new(meme_addr, false),
                 AccountMeta::new_readonly(solana_system_interface::program::ID, false),
             ]
             .to_vec(),
@@ -123,11 +112,11 @@ mod test {
         std::println!("Program executed successfully!");
         std::println!("Transaction logs: {:#?}", result.logs);
 
-        let counter = svm.get_account(&counter).unwrap();
+        let meme = svm.get_account(&meme_addr).unwrap();
 
-        let counter_data = CounterAuthority::deserialize(&mut counter.data.as_ref()).unwrap();
+        let meme_data = Meme::deserialize(&mut meme.data.as_ref()).unwrap();
 
-        assert_eq!(counter_data.count, 19);
-        assert_eq!(counter_data.authority, payer.pubkey());
+        assert_eq!(meme_data.bump, bump);
+        assert_eq!(meme_data.address, meme_addr)
     }
 }

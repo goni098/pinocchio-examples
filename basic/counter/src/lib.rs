@@ -43,6 +43,10 @@ pub fn process(
     accounts: &[AccountView],
     instruction_data: &[u8],
 ) -> ProgramResult {
+    if !crate::check_id(program_id.as_array()) {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
     match CounterInstruction::try_from_slice(instruction_data)
         .map_err(|_| ProgramError::InvalidInstructionData)?
     {

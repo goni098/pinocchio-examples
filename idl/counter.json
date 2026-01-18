@@ -145,6 +145,54 @@
 	],
 	"types": [
 		{
+			"name": "CounterIncreased",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "newCount",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "CounterAuthorityIncreased",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "newCount",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "CounterInitialized",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "count",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "CounterAuthorityInitialized",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "count",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
 			"name": "Params",
 			"type": {
 				"kind": "struct",
@@ -164,6 +212,46 @@
 					{
 						"name": "count",
 						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "CounterEvent",
+			"type": {
+				"kind": "enum",
+				"variants": [
+					{
+						"name": "CounterInitialized",
+						"fields": [
+							{
+								"defined": "CounterInitialized"
+							}
+						]
+					},
+					{
+						"name": "CounterIncreased",
+						"fields": [
+							{
+								"defined": "CounterIncreased"
+							}
+						]
+					},
+					{
+						"name": "CounterAuthorityInitialized",
+						"fields": [
+							{
+								"defined": "CounterAuthorityInitialized"
+							}
+						]
+					},
+					{
+						"name": "CounterAuthorityIncreased",
+						"fields": [
+							{
+								"defined": "CounterAuthorityIncreased"
+							}
+						]
 					}
 				]
 			}

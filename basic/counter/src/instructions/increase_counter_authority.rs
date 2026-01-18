@@ -5,14 +5,9 @@ use shared::event::emit;
 use crate::{
     accounts::CounterAuthority,
     events::{CounterAuthorityIncreased, CounterEvent},
-    ID,
 };
 
-pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
-    if program_id.as_array().ne(&ID) {
-        return Err(ProgramError::IncorrectProgramId);
-    }
-
+pub fn process(_program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
     let [authority, counter] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };

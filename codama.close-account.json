@@ -1,0 +1,10 @@
+{
+	"idl": "idl/close_account.json",
+	"before": [],
+	"scripts": {
+		"counter": {
+			"from": "@codama/renderers-js",
+			"args": ["js-client/close-account"]
+		}
+	}
+}

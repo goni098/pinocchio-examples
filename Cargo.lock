@@ -606,6 +606,17 @@ dependencies = [
 [[package]]
 name = "close-account"
 version = "0.1.0"
+dependencies = [
+ "borsh",
+ "litesvm",
+ "pinocchio 0.10.1",
+ "pinocchio-log",
+ "pinocchio-pubkey",
+ "pinocchio-system",
+ "shank",
+ "solana-sdk",
+ "solana-system-interface 3.0.0",
+]
 
 [[package]]
 name = "combine"

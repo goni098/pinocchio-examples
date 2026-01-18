@@ -1,0 +1,81 @@
+{
+	"version": "0.1.0",
+	"name": "close_account",
+	"instructions": [
+		{
+			"name": "CreateMeme",
+			"accounts": [
+				{
+					"name": "payer",
+					"isMut": false,
+					"isSigner": true
+				},
+				{
+					"name": "meme",
+					"isMut": true,
+					"isSigner": false
+				},
+				{
+					"name": "systemProgram",
+					"isMut": false,
+					"isSigner": false
+				}
+			],
+			"args": [],
+			"discriminant": {
+				"type": "u8",
+				"value": 0
+			}
+		},
+		{
+			"name": "CloseMeme",
+			"accounts": [
+				{
+					"name": "payer",
+					"isMut": false,
+					"isSigner": true
+				},
+				{
+					"name": "meme",
+					"isMut": true,
+					"isSigner": false
+				},
+				{
+					"name": "systemProgram",
+					"isMut": false,
+					"isSigner": false
+				}
+			],
+			"args": [],
+			"discriminant": {
+				"type": "u8",
+				"value": 1
+			}
+		}
+	],
+	"accounts": [
+		{
+			"name": "Meme",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "address",
+						"type": {
+							"array": ["u8", 32]
+						},
+						"attrs": ["idl-type"]
+					},
+					{
+						"name": "bump",
+						"type": "u8"
+					}
+				]
+			}
+		}
+	],
+	"metadata": {
+		"origin": "shank",
+		"address": "2HXWQuEjgRDbNcMx3X32C1aw4fftVMHyUf9KXYyTiPiD"
+	}
+}

@@ -1,13 +1,9 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use pinocchio::{error::ProgramError, AccountView, Address, ProgramResult};
 
-use crate::{accounts::Counter, ID};
+use crate::accounts::Counter;
 
-pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
-    if program_id.as_array().ne(&ID) {
-        return Err(ProgramError::IncorrectProgramId);
-    }
-
+pub fn process(_program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
     let [counter] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };

@@ -7,7 +7,7 @@ use pinocchio::{
 };
 use pinocchio_system::instructions::CreateAccount;
 
-use crate::{accounts::Counter, ID};
+use crate::accounts::Counter;
 
 #[derive(BorshSerialize, BorshDeserialize)]
 pub struct Params {
@@ -15,10 +15,6 @@ pub struct Params {
 }
 
 pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -> ProgramResult {
-    if program_id.as_array().ne(&ID) {
-        return Err(ProgramError::IncorrectProgramId);
-    }
-
     let [payer, counter, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
