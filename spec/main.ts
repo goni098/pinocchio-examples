@@ -7,6 +7,7 @@ import {
 	createSolanaRpc,
 	createSolanaRpcSubscriptions,
 	createTransactionMessage,
+	getBase58Decoder,
 	getProgramDerivedAddress,
 	getSignatureFromTransaction,
 	type Instruction,
@@ -85,9 +86,7 @@ const buildAndSendTransaction = async (
 
 const client = {
 	rpc,
-	buildMessage,
-	buildAndSendTransaction,
-	sendAndConfirmTransaction
+	buildAndSendTransaction
 }
 
 const main = async () => {
@@ -112,6 +111,8 @@ const main = async () => {
 	}
 
 	const meme = await fetchMeme(rpc, memeAddr)
+
+	assert(getBase58Decoder().decode(meme.data.address) === memeAddr)
 
 	assert(meme.data.bump, bump)
 	assert(meme.data.address, memeAddr)
