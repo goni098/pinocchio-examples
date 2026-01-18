@@ -6,15 +6,20 @@ use pinocchio::{
     AccountView, Address, ProgramResult,
 };
 use pinocchio_system::instructions::CreateAccount;
+use shank::ShankType;
 
 use crate::accounts::Counter;
 
-#[derive(BorshSerialize, BorshDeserialize)]
-pub struct Params {
+#[derive(BorshSerialize, BorshDeserialize, ShankType)]
+pub struct InitCounterArgs {
     pub count: u64,
 }
 
-pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -> ProgramResult {
+pub fn init_counter(
+    program_id: &Address,
+    accounts: &[AccountView],
+    args: InitCounterArgs,
+) -> ProgramResult {
     let [payer, counter, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -39,7 +44,7 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
 
     let counter_data = Counter {
         bump,
-        count: params.count,
+        count: args.count,
     };
 
     let account_span = Counter::SPACE;
@@ -94,7 +99,7 @@ mod test {
 
         let (counter, _) = Counter::derive();
 
-        let ix_data = CounterInstruction::InitCounter(super::Params { count: 19 });
+        let ix_data = CounterInstruction::InitCounter(super::InitCounterArgs { count: 19 });
 
         let ix = Instruction {
             program_id,

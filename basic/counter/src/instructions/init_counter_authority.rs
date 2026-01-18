@@ -6,15 +6,20 @@ use pinocchio::{
     AccountView, Address, ProgramResult,
 };
 use pinocchio_system::instructions::CreateAccount;
+use shank::ShankType;
 
 use crate::accounts::CounterAuthority;
 
-#[derive(BorshSerialize, BorshDeserialize)]
-pub struct Params {
+#[derive(BorshSerialize, BorshDeserialize, ShankType)]
+pub struct InitCounterAuthorityArgs {
     pub count: u64,
 }
 
-pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -> ProgramResult {
+pub fn init_counter_authority(
+    program_id: &Address,
+    accounts: &[AccountView],
+    args: InitCounterAuthorityArgs,
+) -> ProgramResult {
     let [payer, counter_authority, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -39,7 +44,7 @@ pub fn process(program_id: &Address, accounts: &[AccountView], params: Params) -
 
     let counter_data = CounterAuthority {
         bump,
-        count: params.count,
+        count: args.count,
         authority: payer.address().clone(),
     };
 
@@ -98,7 +103,9 @@ mod test {
 
         let (counter, _) = CounterAuthority::derive(&payer.pubkey());
 
-        let ix_data = CounterInstruction::InitCounterAuhthority(super::Params { count: 19 });
+        let ix_data = CounterInstruction::InitCounterAuhthority(super::InitCounterAuthorityArgs {
+            count: 19,
+        });
 
         let ix = Instruction {
             program_id,

@@ -3,7 +3,7 @@ use pinocchio::{error::ProgramError, AccountView, Address, ProgramResult};
 
 use crate::accounts::Counter;
 
-pub fn process(_program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
+pub fn increase_counter(_program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
     let [counter] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };

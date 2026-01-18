@@ -4,8 +4,9 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
+		"type-check": "tsc --noEmit",
 		"clean": "biome check . --write --unsafe",
-		"program:gen": "rm -rf js-client && codama run --all -c codama.close-account.json && pnpm run clean",
+		"program:gen": "rm -rf js-client/close-account && codama run --all -c codama.close-account.json && pnpm run clean",
 		"gen:idl": "shank idl -o idl -r basic/counter",
 		"deploy:program": "solana program deploy --program-id deploy/basic/close-account/program.json target/deploy/close_account.so --url devnet"
 	},

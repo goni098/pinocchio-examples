@@ -7,7 +7,10 @@ use crate::{
     events::{CounterAuthorityIncreased, CounterEvent},
 };
 
-pub fn process(_program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
+pub fn increase_counter_authority(
+    _program_id: &Address,
+    accounts: &[AccountView],
+) -> ProgramResult {
     let [authority, counter] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };

@@ -1,14 +1,10 @@
-import { assert } from "node:console"
 import {
 	appendTransactionMessageInstruction,
 	assertIsSendableTransaction,
 	assertIsTransactionWithBlockhashLifetime,
-	createSignerFromKeyPair,
 	createSolanaRpc,
 	createSolanaRpcSubscriptions,
 	createTransactionMessage,
-	getBase58Decoder,
-	getProgramDerivedAddress,
 	getSignatureFromTransaction,
 	type Instruction,
 	type KeyPairSigner,
@@ -23,18 +19,10 @@ import {
 	getSetComputeUnitLimitInstruction,
 	getSetComputeUnitPriceInstruction
 } from "@solana-program/compute-budget"
-import {
-	CLOSE_ACCOUNT_PROGRAM_ADDRESS,
-	fetchMaybeMeme,
-	fetchMeme,
-	getCloseMemeInstruction,
-	getCreateMemeInstruction
-} from "js-client/close-account"
-import { getKeyPair } from "./keypair"
 
-const rpc = createSolanaRpc("https://api.devnet.solana.com")
+export const rpc = createSolanaRpc("https://api.devnet.solana.com")
 
-const rpcSubscriptions = createSolanaRpcSubscriptions("wss://api.devnet.solana.com")
+export const rpcSubscriptions = createSolanaRpcSubscriptions("wss://api.devnet.solana.com")
 
 const sendAndConfirmTransaction = sendAndConfirmTransactionFactory({
 	rpc,
@@ -69,7 +57,7 @@ const buildMessage = async (signer: KeyPairSigner<string>, instructions: Instruc
 	)
 }
 
-const buildAndSendTransaction = async (
+export const buildAndSendTransaction = async (
 	signer: KeyPairSigner<string>,
 	instructions: Instruction[]
 ) => {
@@ -83,49 +71,3 @@ const buildAndSendTransaction = async (
 
 	return getSignatureFromTransaction(transaction)
 }
-
-const client = {
-	rpc,
-	buildAndSendTransaction
-}
-
-const main = async () => {
-	const payer = await createSignerFromKeyPair(await getKeyPair())
-
-	const [memeAddr, bump] = await getProgramDerivedAddress({
-		programAddress: CLOSE_ACCOUNT_PROGRAM_ADDRESS,
-		seeds: [Buffer.from("meme")]
-	})
-
-	const memeAcc = await fetchMaybeMeme(rpc, memeAddr)
-
-	if (!memeAcc.exists) {
-		const createMemeIx = getCreateMemeInstruction({
-			meme: memeAddr,
-			payer
-		})
-
-		const createMemeSignature = await client.buildAndSendTransaction(payer, [createMemeIx])
-
-		console.log("createMemeSignature: ", createMemeSignature)
-	}
-
-	const meme = await fetchMeme(rpc, memeAddr)
-
-	assert(getBase58Decoder().decode(meme.data.address) === memeAddr)
-
-	assert(meme.data.bump, bump)
-	assert(meme.data.address, memeAddr)
-
-	const closeMemeIx = getCloseMemeInstruction({ meme: memeAddr, payer })
-
-	const closeMemeSignature = await client.buildAndSendTransaction(payer, [closeMemeIx])
-
-	console.log("closeMemeSignature: ", closeMemeSignature)
-
-	const memeAccAfterClose = await fetchMaybeMeme(rpc, memeAddr)
-
-	assert(!memeAccAfterClose.exists)
-}
-
-main()

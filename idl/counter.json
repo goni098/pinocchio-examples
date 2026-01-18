@@ -23,9 +23,9 @@
 			],
 			"args": [
 				{
-					"name": "initCounter",
+					"name": "initCounterArgs",
 					"type": {
-						"defined": "init_counter"
+						"defined": "InitCounterArgs"
 					}
 				}
 			],
@@ -70,9 +70,9 @@
 			],
 			"args": [
 				{
-					"name": "initCounterAuthority",
+					"name": "initCounterAuthorityArgs",
 					"type": {
-						"defined": "init_counter_authority"
+						"defined": "InitCounterAuthorityArgs"
 					}
 				}
 			],
@@ -193,7 +193,7 @@
 			}
 		},
 		{
-			"name": "Params",
+			"name": "InitCounterArgs",
 			"type": {
 				"kind": "struct",
 				"fields": [
@@ -205,7 +205,7 @@
 			}
 		},
 		{
-			"name": "Params",
+			"name": "InitCounterAuthorityArgs",
 			"type": {
 				"kind": "struct",
 				"fields": [

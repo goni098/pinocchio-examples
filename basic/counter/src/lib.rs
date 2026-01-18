@@ -8,6 +8,7 @@ use shank::ShankInstruction;
 
 use crate::instructions::{
     increase_counter, increase_counter_authority, init_counter, init_counter_authority,
+    InitCounterArgs, InitCounterAuthorityArgs,
 };
 
 mod accounts;
@@ -23,7 +24,7 @@ pub enum CounterInstruction {
     #[account(0, sig, name = "payer")]
     #[account(1, mut, name = "counter")]
     #[account(2, name = "system_program")]
-    InitCounter(init_counter::Params),
+    InitCounter(InitCounterArgs),
 
     #[account(0, mut, name = "counter")]
     IncreaseCounter,
@@ -31,7 +32,7 @@ pub enum CounterInstruction {
     #[account(0, sig, name = "payer")]
     #[account(1, mut, name = "counter_authority")]
     #[account(2, name = "system_program")]
-    InitCounterAuhthority(init_counter_authority::Params),
+    InitCounterAuhthority(InitCounterAuthorityArgs),
 
     #[account(0, sig, name = "authority")]
     #[account(1, mut, name = "counter_authority")]
@@ -50,15 +51,13 @@ pub fn process(
     match CounterInstruction::try_from_slice(instruction_data)
         .map_err(|_| ProgramError::InvalidInstructionData)?
     {
-        CounterInstruction::InitCounter(params) => {
-            init_counter::process(program_id, accounts, params)
-        }
-        CounterInstruction::IncreaseCounter => increase_counter::process(program_id, accounts),
+        CounterInstruction::InitCounter(params) => init_counter(program_id, accounts, params),
+        CounterInstruction::IncreaseCounter => increase_counter(program_id, accounts),
         CounterInstruction::InitCounterAuhthority(params) => {
-            init_counter_authority::process(program_id, accounts, params)
+            init_counter_authority(program_id, accounts, params)
         }
         CounterInstruction::IncreaseCounterAuthority => {
-            increase_counter_authority::process(program_id, accounts)
+            increase_counter_authority(program_id, accounts)
         }
     }
 }
