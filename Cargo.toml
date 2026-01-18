@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["basic/*", "crates/shared"]
+members = ["basic/*", "shared", "token/create-mint", "token/transfer-mint"]
 
 [workspace.dependencies]
 pinocchio = "0.10.1"

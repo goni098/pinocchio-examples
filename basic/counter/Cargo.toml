@@ -15,7 +15,7 @@ shank = { workspace = true }
 borsh = { workspace = true }
 solana-address = { workspace = true }
 
-shared = { path = "../../crates/shared" }
+shared = { path = "../../shared" }
 
 [dev-dependencies]
 litesvm = "0.9.0"
