@@ -62,8 +62,7 @@ pub fn init_counter(
         space: account_span as u64,
         owner: program_id,
     }
-    .invoke()?;
-    // .invoke_signed(&[signers])?;
+    .invoke_signed(&[signers])?;
 
     counter_data
         .serialize(&mut counter.try_borrow_mut()?.as_mut())
