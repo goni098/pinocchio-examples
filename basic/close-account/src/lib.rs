@@ -2,7 +2,10 @@
 #![allow(unexpected_cfgs)]
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use pinocchio::{entrypoint, error::ProgramError, AccountView, Address, ProgramResult};
+use pinocchio::{
+    default_panic_handler, error::ProgramError, no_allocator, program_entrypoint, AccountView,
+    Address, ProgramResult,
+};
 use pinocchio_pubkey::declare_id;
 use shank::ShankInstruction;
 
@@ -11,7 +14,9 @@ use crate::instructions::{close_meme, create_meme};
 mod accounts;
 mod instructions;
 
-entrypoint!(process);
+program_entrypoint!(process);
+no_allocator!();
+default_panic_handler!();
 
 declare_id!("2HXWQuEjgRDbNcMx3X32C1aw4fftVMHyUf9KXYyTiPiD");
 
