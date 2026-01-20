@@ -1,0 +1,18 @@
+[package]
+name = "basic-mint"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+pinocchio = { workspace = true }
+pinocchio-pubkey = { workspace = true }
+pinocchio-system = { workspace = true }
+shank = { workspace = true }
+borsh = { workspace = true }
+pinocchio-token = { workspace = true }
+pinocchio-token-2022 = { workspace = true }
+spl-token-2022-interface = { workspace = true }
+solana-address = { workspace = true }

@@ -56,6 +56,8 @@ const main = async () => {
 
 	const counterAfterIncrease = await fetchCounterAuthority(rpc, counterAddr)
 
+	console.log("owner: ", counterAfterIncrease.address)
+
 	assert(counterAfterIncrease.data.count === currentCount + 1n)
 }
 
