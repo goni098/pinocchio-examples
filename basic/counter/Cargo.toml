@@ -13,11 +13,10 @@ pinocchio-pubkey = { workspace = true }
 pinocchio-system = { workspace = true }
 shank = { workspace = true }
 borsh = { workspace = true }
-solana-address = { workspace = true }
 
 shared = { path = "../../shared" }
 
 [dev-dependencies]
-litesvm = "0.9.0"
-solana-sdk = "3.0.0"
-solana-system-interface = "3.0.0"
+litesvm = "0.10"
+solana-sdk = "3"
+solana-system-interface = "3"

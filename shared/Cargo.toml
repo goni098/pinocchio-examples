@@ -8,4 +8,3 @@ base64 = { workspace = true }
 borsh = { workspace = true }
 pinocchio-log = { workspace = true }
 pinocchio = { workspace = true }
-pinocchio-token-2022 = { workspace = true }

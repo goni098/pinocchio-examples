@@ -1,21 +1,13 @@
 use pinocchio::{error::ProgramError, AccountView, Address, ProgramResult};
 
-pub fn process(_program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
-    let [payer, meme, system_program] = accounts else {
+pub fn process(_program_id: &Address, accounts: &mut [AccountView]) -> ProgramResult {
+    let [payer, meme, _system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
-    let leaving_lamports = 0;
-    let taking_lamports = meme.lamports() - leaving_lamports;
+    payer.set_lamports(payer.lamports() + meme.lamports());
 
-    meme.set_lamports(leaving_lamports);
-    payer.set_lamports(payer.lamports() + taking_lamports);
-
-    meme.resize(0)?;
-
-    unsafe {
-        meme.assign(system_program.address());
-    }
+    meme.close()?;
 
     Ok(())
 }
@@ -54,7 +46,7 @@ mod test {
             Account {
                 data: borsh::to_vec(&Meme {
                     bump,
-                    address: meme,
+                    address: meme.to_bytes(),
                 })
                 .unwrap(),
                 executable: false,

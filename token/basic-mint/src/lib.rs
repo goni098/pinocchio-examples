@@ -39,7 +39,7 @@ pub enum BasicMintInstruction {
 
 pub fn process(
     program_id: &Address,
-    accounts: &[AccountView],
+    accounts: &mut [AccountView],
     instruction_data: &[u8],
 ) -> ProgramResult {
     if !crate::check_id(program_id.as_array()) {

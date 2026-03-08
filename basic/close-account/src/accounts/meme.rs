@@ -3,8 +3,7 @@ use pinocchio::Address;
 
 #[derive(BorshDeserialize, BorshSerialize, shank::ShankAccount)]
 pub struct Meme {
-    #[idl_type("[u8;32]")]
-    pub address: Address,
+    pub address: [u8; 32],
     pub bump: u8,
 }
 

@@ -1,18 +1,12 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use pinocchio::{
     error::ProgramError,
-    sysvars::{
-        rent::{
-            Rent, DEFAULT_EXEMPTION_THRESHOLD, DEFAULT_LAMPORTS_PER_BYTE,
-            DEFAULT_LAMPORTS_PER_BYTE_YEAR,
-        },
-        Sysvar,
-    },
+    sysvars::{rent::Rent, Sysvar},
     AccountView, ProgramResult,
 };
 use pinocchio_system::instructions::CreateAccount;
+use pinocchio_token_2022::instructions::metadata_pointer::Initialize as InitializeMetadataPointer;
 use shank::ShankType;
-// use spl_token_2022_interface::extension::ExtensionType;
 
 #[derive(BorshDeserialize, BorshSerialize, ShankType)]
 pub struct CreateMintArgs {
@@ -58,26 +52,71 @@ pub fn create_mint(
         return Err(ProgramError::AccountAlreadyInitialized);
     }
 
-    let (lamports_required, space) = if is_spl_token {
-        let mint_size = pinocchio_token::state::Mint::LEN;
-        let lamports = Rent::get()?.minimum_balance_unchecked(pinocchio_token::state::Mint::LEN);
-
-        (lamports, mint_size)
+    // For Token-2022 with embedded metadata:
+    // - Allocate exactly `try_calculate_account_len(&[MetadataPointer])` = 234 bytes so that
+    //   both MetadataPointerInstruction::Initialize and InitializeMint2 (which does a strict
+    //   size == try_calculate_account_len check) succeed.
+    // - Pre-fund with lamports for the *full* final size, because InitializeTokenMetadata
+    //   internally reallocates the account via `AccountInfo::realloc` and assumes the
+    //   account already holds enough SOL for the new rent-exempt balance.
+    let (space, lamport_space) = if is_spl_token {
+        let s = pinocchio_token::state::Mint::LEN;
+        (s, s)
     } else {
-        let mint_size = 234;
+        use core::mem::size_of;
+        use pinocchio::Address;
 
-        let metadata_len = 4 + 117;
+        // Token-2022 pads the base Mint up to TokenAccount::BASE_LEN, then adds 1 byte for the
+        // account type tag before extensions begin.
+        const EXTENSIONS_OFFSET: usize = pinocchio_token_2022::state::TokenAccount::BASE_LEN + 1
+            - pinocchio_token_2022::state::Mint::BASE_LEN;
 
-        let larmports = Rent::get()?.minimum_balance_unchecked(mint_size);
+        // MetadataPointer extension TLV: 2 (type u16) + 2 (len u16) + 32 (authority) + 32 (metadata_address)
+        const METADATA_POINTER_SIZE: usize = size_of::<u16>() * 2 + size_of::<Address>() * 2;
 
-        (larmports, mint_size)
+        // Account space required before InitializeTokenMetadata reallocs.
+        let account_space =
+            pinocchio_token_2022::state::Mint::BASE_LEN + EXTENSIONS_OFFSET + METADATA_POINTER_SIZE;
+
+        // TokenMetadata TLV header: 8 (ArrayDiscriminator) + 4 (PodU32 length field)
+        const METADATA_TLV_HEADER: usize = 8 + 4;
+
+        // TokenMetadata base payload: update_authority (32) + mint (32) + 4×(u32 string-length prefix)
+        const METADATA_BASE_PAYLOAD: usize = size_of::<Address>() * 2 + size_of::<u32>() * 4;
+
+        // Compute actual string lengths (null-terminated in fixed arrays)
+        let name_len = args
+            .name
+            .iter()
+            .position(|&b| b == 0)
+            .unwrap_or(args.name.len());
+        let symbol_len = args
+            .symbol
+            .iter()
+            .position(|&b| b == 0)
+            .unwrap_or(args.symbol.len());
+        let uri_len = args
+            .uri
+            .iter()
+            .position(|&b| b == 0)
+            .unwrap_or(args.uri.len());
+
+        let full_space = account_space
+            + METADATA_TLV_HEADER
+            + METADATA_BASE_PAYLOAD
+            + name_len
+            + symbol_len
+            + uri_len;
+
+        (account_space, full_space)
     };
 
-    // Create the mint account
+    let rent = Rent::get()?;
+
     CreateAccount {
         from: payer,
         to: mint,
-        lamports: lamports_required,
+        lamports: rent.minimum_balance_unchecked(lamport_space),
         space: space as u64,
         owner: token_program.address(),
     }
@@ -86,10 +125,11 @@ pub fn create_mint(
     if is_token_2022 {
         // Initialize metadata pointer extension
         // This must be done before InitializeMint
-        shared::extensions::InitializeMetadataPointer {
+        InitializeMetadataPointer {
             authority: None,
             metadata_address: Some(mint.address()),
             mint,
+            token_program: token_program.address(),
         }
         .invoke()?;
     }
@@ -116,21 +156,74 @@ pub fn create_mint(
 
     if is_token_2022 {
         // Initialize token metadata
-        // Convert fixed-size arrays to strings
+        // Discriminator = sha256("spl_token_metadata_interface:initialize_account")[..8]
+        const DISCRIMINATOR: [u8; 8] = [210, 225, 30, 162, 88, 184, 77, 141];
+
         let name = shared::helpers::from_fixed_bytes(&args.name)?;
         let symbol = shared::helpers::from_fixed_bytes(&args.symbol)?;
         let uri = shared::helpers::from_fixed_bytes(&args.uri)?;
 
-        shared::extensions::InitializeTokenMetadata {
-            metadata: mint,
-            update_authority: payer,
-            mint,
-            mint_authority: payer,
-            name,
-            symbol,
-            uri,
+        let name_b = name.as_bytes();
+        let symbol_b = symbol.as_bytes();
+        let uri_b = uri.as_bytes();
+
+        // Max ix_data size: 8 + (4+32) + (4+8) + (4+64) = 124
+        let mut ix_data = [0u8; 128];
+        let mut pos = 0;
+
+        ix_data[pos..pos + 8].copy_from_slice(&DISCRIMINATOR);
+        pos += 8;
+
+        ix_data[pos..pos + 4].copy_from_slice(&(name_b.len() as u32).to_le_bytes());
+        pos += 4;
+        ix_data[pos..pos + name_b.len()].copy_from_slice(name_b);
+        pos += name_b.len();
+
+        ix_data[pos..pos + 4].copy_from_slice(&(symbol_b.len() as u32).to_le_bytes());
+        pos += 4;
+        ix_data[pos..pos + symbol_b.len()].copy_from_slice(symbol_b);
+        pos += symbol_b.len();
+
+        ix_data[pos..pos + 4].copy_from_slice(&(uri_b.len() as u32).to_le_bytes());
+        pos += 4;
+        ix_data[pos..pos + uri_b.len()].copy_from_slice(uri_b);
+        pos += uri_b.len();
+
+        {
+            use pinocchio::cpi::{invoke_signed_unchecked, CpiAccount};
+            use pinocchio::instruction::{InstructionAccount, InstructionView};
+
+            let instruction_accounts = [
+                InstructionAccount::writable(mint.address()),
+                InstructionAccount::readonly(payer.address()),
+                InstructionAccount::readonly(mint.address()),
+                InstructionAccount::readonly_signer(payer.address()),
+            ];
+
+            let instruction = InstructionView {
+                program_id: &pinocchio_token_2022::ID,
+                accounts: &instruction_accounts,
+                data: &ix_data[..pos],
+            };
+
+            // `invoke` requires account_views.len() == instruction.accounts.len()
+            // and no duplicate borrows. TokenMetadata::initialize_account has 4
+            // accounts where mint appears at [0] and [2], payer at [1] and [3].
+            // We use invoke_signed_unchecked with CpiAccount (raw-pointer-based)
+            // so the same AccountView can appear in multiple slots.
+            //
+            // SAFETY: mint and payer are not mutably borrowed elsewhere.
+            // Token-2022 reads mint at [2] after writing to it at [0], so the
+            // aliased access is benign within the sub-program's sequential logic.
+            let cpi_accounts = [
+                CpiAccount::from(mint as &AccountView),
+                CpiAccount::from(payer as &AccountView),
+                CpiAccount::from(mint as &AccountView),
+                CpiAccount::from(payer as &AccountView),
+            ];
+
+            unsafe { invoke_signed_unchecked(&instruction, &cpi_accounts, &[]) }
         }
-        .invoke()?;
     }
 
     if is_token_2022 {
@@ -146,6 +239,7 @@ pub fn create_mint(
         pinocchio_token::instructions::SetAuthority {
             account: mint,
             authority: payer,
+            multisig_signers: &[],
             authority_type: pinocchio_token::instructions::AuthorityType::MintTokens,
             new_authority: None,
         }

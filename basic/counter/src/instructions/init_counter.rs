@@ -17,7 +17,7 @@ pub struct InitCounterArgs {
 
 pub fn init_counter(
     program_id: &Address,
-    accounts: &[AccountView],
+    accounts: &mut [AccountView],
     args: InitCounterArgs,
 ) -> ProgramResult {
     let [payer, counter, system_program] = accounts else {

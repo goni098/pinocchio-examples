@@ -6,8 +6,41 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { type Address, containsBytes, getU8Encoder, type ReadonlyUint8Array } from "@solana/kit"
-import type { ParsedCloseMemeInstruction, ParsedCreateMemeInstruction } from "../instructions"
+import {
+	type Address,
+	assertIsInstructionWithAccounts,
+	type ClientWithPayer,
+	type ClientWithRpc,
+	type ClientWithTransactionPlanning,
+	type ClientWithTransactionSending,
+	containsBytes,
+	type GetAccountInfoApi,
+	type GetMultipleAccountsApi,
+	getU8Encoder,
+	type Instruction,
+	type InstructionWithData,
+	type ReadonlyUint8Array,
+	SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
+	SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
+	SolanaError
+} from "@solana/kit"
+import {
+	addSelfFetchFunctions,
+	addSelfPlanAndSendFunctions,
+	type SelfFetchFunctions,
+	type SelfPlanAndSendFunctions
+} from "@solana/program-client-core"
+import { getMemeCodec, type Meme, type MemeArgs } from "../accounts"
+import {
+	type CloseMemeInput,
+	type CreateMemeInput,
+	getCloseMemeInstruction,
+	getCreateMemeInstruction,
+	type ParsedCloseMemeInstruction,
+	type ParsedCreateMemeInstruction,
+	parseCloseMemeInstruction,
+	parseCreateMemeInstruction
+} from "../instructions"
 
 export const CLOSE_ACCOUNT_PROGRAM_ADDRESS =
 	"2HXWQuEjgRDbNcMx3X32C1aw4fftVMHyUf9KXYyTiPiD" as Address<"2HXWQuEjgRDbNcMx3X32C1aw4fftVMHyUf9KXYyTiPiD">
@@ -31,7 +64,10 @@ export function identifyCloseAccountInstruction(
 	if (containsBytes(data, getU8Encoder().encode(1), 0)) {
 		return CloseAccountInstruction.CloseMeme
 	}
-	throw new Error("The provided instruction could not be identified as a closeAccount instruction.")
+	throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION, {
+		instructionData: data,
+		programName: "closeAccount"
+	})
 }
 
 export type ParsedCloseAccountInstruction<
@@ -43,3 +79,86 @@ export type ParsedCloseAccountInstruction<
 	| ({
 			instructionType: CloseAccountInstruction.CloseMeme
 	  } & ParsedCloseMemeInstruction<TProgram>)
+
+export function parseCloseAccountInstruction<TProgram extends string>(
+	instruction: Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array>
+): ParsedCloseAccountInstruction<TProgram> {
+	const instructionType = identifyCloseAccountInstruction(instruction)
+	switch (instructionType) {
+		case CloseAccountInstruction.CreateMeme: {
+			assertIsInstructionWithAccounts(instruction)
+			return {
+				instructionType: CloseAccountInstruction.CreateMeme,
+				...parseCreateMemeInstruction(instruction)
+			}
+		}
+		case CloseAccountInstruction.CloseMeme: {
+			assertIsInstructionWithAccounts(instruction)
+			return {
+				instructionType: CloseAccountInstruction.CloseMeme,
+				...parseCloseMemeInstruction(instruction)
+			}
+		}
+		default:
+			throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE, {
+				instructionType: instructionType as string,
+				programName: "closeAccount"
+			})
+	}
+}
+
+export type CloseAccountPlugin = {
+	accounts: CloseAccountPluginAccounts
+	instructions: CloseAccountPluginInstructions
+}
+
+export type CloseAccountPluginAccounts = {
+	meme: ReturnType<typeof getMemeCodec> & SelfFetchFunctions<MemeArgs, Meme>
+}
+
+export type CloseAccountPluginInstructions = {
+	createMeme: (
+		input: MakeOptional<CreateMemeInput, "payer">
+	) => ReturnType<typeof getCreateMemeInstruction> & SelfPlanAndSendFunctions
+	closeMeme: (
+		input: MakeOptional<CloseMemeInput, "payer">
+	) => ReturnType<typeof getCloseMemeInstruction> & SelfPlanAndSendFunctions
+}
+
+export type CloseAccountPluginRequirements = ClientWithRpc<
+	GetAccountInfoApi & GetMultipleAccountsApi
+> &
+	ClientWithPayer &
+	ClientWithTransactionPlanning &
+	ClientWithTransactionSending
+
+export function closeAccountProgram() {
+	return <T extends CloseAccountPluginRequirements>(client: T) => {
+		return {
+			...client,
+			closeAccount: <CloseAccountPlugin>{
+				accounts: { meme: addSelfFetchFunctions(client, getMemeCodec()) },
+				instructions: {
+					createMeme: input =>
+						addSelfPlanAndSendFunctions(
+							client,
+							getCreateMemeInstruction({
+								...input,
+								payer: input.payer ?? client.payer
+							})
+						),
+					closeMeme: input =>
+						addSelfPlanAndSendFunctions(
+							client,
+							getCloseMemeInstruction({
+								...input,
+								payer: input.payer ?? client.payer
+							})
+						)
+				}
+			}
+		}
+	}
+}
+
+type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
