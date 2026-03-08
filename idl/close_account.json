@@ -63,8 +63,7 @@
 						"name": "address",
 						"type": {
 							"array": ["u8", 32]
-						},
-						"attrs": ["idl-type"]
+						}
 					},
 					{
 						"name": "bump",

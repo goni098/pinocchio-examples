@@ -6,12 +6,55 @@
  * @see https://github.com/codama-idl/codama
  */
 
-import { type Address, containsBytes, getU8Encoder, type ReadonlyUint8Array } from "@solana/kit"
-import type {
-	ParsedIncreaseCounterAuthorityInstruction,
-	ParsedIncreaseCounterInstruction,
-	ParsedInitCounterAuhthorityInstruction,
-	ParsedInitCounterInstruction
+import {
+	type Address,
+	assertIsInstructionWithAccounts,
+	type ClientWithPayer,
+	type ClientWithRpc,
+	type ClientWithTransactionPlanning,
+	type ClientWithTransactionSending,
+	containsBytes,
+	type GetAccountInfoApi,
+	type GetMultipleAccountsApi,
+	getU8Encoder,
+	type Instruction,
+	type InstructionWithData,
+	type ReadonlyUint8Array,
+	SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
+	SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
+	SolanaError
+} from "@solana/kit"
+import {
+	addSelfFetchFunctions,
+	addSelfPlanAndSendFunctions,
+	type SelfFetchFunctions,
+	type SelfPlanAndSendFunctions
+} from "@solana/program-client-core"
+import {
+	type Counter,
+	type CounterArgs,
+	type CounterAuthority,
+	type CounterAuthorityArgs,
+	getCounterAuthorityCodec,
+	getCounterCodec
+} from "../accounts"
+import {
+	getIncreaseCounterAuthorityInstruction,
+	getIncreaseCounterInstruction,
+	getInitCounterAuhthorityInstruction,
+	getInitCounterInstruction,
+	type IncreaseCounterAuthorityInput,
+	type IncreaseCounterInput,
+	type InitCounterAuhthorityInput,
+	type InitCounterInput,
+	type ParsedIncreaseCounterAuthorityInstruction,
+	type ParsedIncreaseCounterInstruction,
+	type ParsedInitCounterAuhthorityInstruction,
+	type ParsedInitCounterInstruction,
+	parseIncreaseCounterAuthorityInstruction,
+	parseIncreaseCounterInstruction,
+	parseInitCounterAuhthorityInstruction,
+	parseInitCounterInstruction
 } from "../instructions"
 
 export const COUNTER_PROGRAM_ADDRESS =
@@ -45,7 +88,10 @@ export function identifyCounterInstruction(
 	if (containsBytes(data, getU8Encoder().encode(3), 0)) {
 		return CounterInstruction.IncreaseCounterAuthority
 	}
-	throw new Error("The provided instruction could not be identified as a counter instruction.")
+	throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION, {
+		instructionData: data,
+		programName: "counter"
+	})
 }
 
 export type ParsedCounterInstruction<
@@ -63,3 +109,113 @@ export type ParsedCounterInstruction<
 	| ({
 			instructionType: CounterInstruction.IncreaseCounterAuthority
 	  } & ParsedIncreaseCounterAuthorityInstruction<TProgram>)
+
+export function parseCounterInstruction<TProgram extends string>(
+	instruction: Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array>
+): ParsedCounterInstruction<TProgram> {
+	const instructionType = identifyCounterInstruction(instruction)
+	switch (instructionType) {
+		case CounterInstruction.InitCounter: {
+			assertIsInstructionWithAccounts(instruction)
+			return {
+				instructionType: CounterInstruction.InitCounter,
+				...parseInitCounterInstruction(instruction)
+			}
+		}
+		case CounterInstruction.IncreaseCounter: {
+			assertIsInstructionWithAccounts(instruction)
+			return {
+				instructionType: CounterInstruction.IncreaseCounter,
+				...parseIncreaseCounterInstruction(instruction)
+			}
+		}
+		case CounterInstruction.InitCounterAuhthority: {
+			assertIsInstructionWithAccounts(instruction)
+			return {
+				instructionType: CounterInstruction.InitCounterAuhthority,
+				...parseInitCounterAuhthorityInstruction(instruction)
+			}
+		}
+		case CounterInstruction.IncreaseCounterAuthority: {
+			assertIsInstructionWithAccounts(instruction)
+			return {
+				instructionType: CounterInstruction.IncreaseCounterAuthority,
+				...parseIncreaseCounterAuthorityInstruction(instruction)
+			}
+		}
+		default:
+			throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE, {
+				instructionType: instructionType as string,
+				programName: "counter"
+			})
+	}
+}
+
+export type CounterPlugin = {
+	accounts: CounterPluginAccounts
+	instructions: CounterPluginInstructions
+}
+
+export type CounterPluginAccounts = {
+	counter: ReturnType<typeof getCounterCodec> & SelfFetchFunctions<CounterArgs, Counter>
+	counterAuthority: ReturnType<typeof getCounterAuthorityCodec> &
+		SelfFetchFunctions<CounterAuthorityArgs, CounterAuthority>
+}
+
+export type CounterPluginInstructions = {
+	initCounter: (
+		input: MakeOptional<InitCounterInput, "payer">
+	) => ReturnType<typeof getInitCounterInstruction> & SelfPlanAndSendFunctions
+	increaseCounter: (
+		input: IncreaseCounterInput
+	) => ReturnType<typeof getIncreaseCounterInstruction> & SelfPlanAndSendFunctions
+	initCounterAuhthority: (
+		input: MakeOptional<InitCounterAuhthorityInput, "payer">
+	) => ReturnType<typeof getInitCounterAuhthorityInstruction> & SelfPlanAndSendFunctions
+	increaseCounterAuthority: (
+		input: IncreaseCounterAuthorityInput
+	) => ReturnType<typeof getIncreaseCounterAuthorityInstruction> & SelfPlanAndSendFunctions
+}
+
+export type CounterPluginRequirements = ClientWithRpc<GetAccountInfoApi & GetMultipleAccountsApi> &
+	ClientWithPayer &
+	ClientWithTransactionPlanning &
+	ClientWithTransactionSending
+
+export function counterProgram() {
+	return <T extends CounterPluginRequirements>(client: T) => {
+		return {
+			...client,
+			counter: <CounterPlugin>{
+				accounts: {
+					counter: addSelfFetchFunctions(client, getCounterCodec()),
+					counterAuthority: addSelfFetchFunctions(client, getCounterAuthorityCodec())
+				},
+				instructions: {
+					initCounter: input =>
+						addSelfPlanAndSendFunctions(
+							client,
+							getInitCounterInstruction({
+								...input,
+								payer: input.payer ?? client.payer
+							})
+						),
+					increaseCounter: input =>
+						addSelfPlanAndSendFunctions(client, getIncreaseCounterInstruction(input)),
+					initCounterAuhthority: input =>
+						addSelfPlanAndSendFunctions(
+							client,
+							getInitCounterAuhthorityInstruction({
+								...input,
+								payer: input.payer ?? client.payer
+							})
+						),
+					increaseCounterAuthority: input =>
+						addSelfPlanAndSendFunctions(client, getIncreaseCounterAuthorityInstruction(input))
+				}
+			}
+		}
+	}
+}
+
+type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>

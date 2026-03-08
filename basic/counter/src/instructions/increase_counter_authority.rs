@@ -9,7 +9,7 @@ use crate::{
 
 pub fn increase_counter_authority(
     _program_id: &Address,
-    accounts: &[AccountView],
+    accounts: &mut [AccountView],
 ) -> ProgramResult {
     let [authority, counter] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -32,7 +32,7 @@ pub fn increase_counter_authority(
     let mut counter_data = CounterAuthority::try_from_slice(&counter.try_borrow()?)
         .map_err(|_| ProgramError::InvalidAccountData)?;
 
-    if counter_data.authority.ne(authority.address()) {
+    if counter_data.authority.ne(authority.address().as_array()) {
         return Err(ProgramError::IllegalOwner);
     }
 
@@ -90,7 +90,7 @@ mod test {
                 data: borsh::to_vec(&CounterAuthority {
                     count: 19,
                     bump: 254,
-                    authority: payer.pubkey(),
+                    authority: payer.pubkey().to_bytes(),
                 })
                 .unwrap(),
                 executable: false,

@@ -21,11 +21,13 @@ import {
 	type InstructionWithAccounts,
 	type InstructionWithData,
 	type ReadonlyUint8Array,
+	SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+	SolanaError,
 	transformEncoder,
 	type WritableAccount
 } from "@solana/kit"
+import { getAccountMetaFactory, type ResolvedInstructionAccount } from "@solana/program-client-core"
 import { COUNTER_PROGRAM_ADDRESS } from "../programs"
-import { getAccountMetaFactory, type ResolvedAccount } from "../shared"
 
 export const INCREASE_COUNTER_DISCRIMINATOR = 1
 
@@ -89,11 +91,14 @@ export function getIncreaseCounterInstruction<
 	const originalAccounts = {
 		counter: { value: input.counter ?? null, isWritable: true }
 	}
-	const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>
+	const accounts = originalAccounts as Record<
+		keyof typeof originalAccounts,
+		ResolvedInstructionAccount
+	>
 
 	const getAccountMeta = getAccountMetaFactory(programAddress, "programId")
 	return Object.freeze({
-		accounts: [getAccountMeta(accounts.counter)],
+		accounts: [getAccountMeta("counter", accounts.counter)],
 		data: getIncreaseCounterInstructionDataEncoder().encode({}),
 		programAddress
 	} as IncreaseCounterInstruction<TProgramAddress, TAccountCounter>)
@@ -119,8 +124,10 @@ export function parseIncreaseCounterInstruction<
 		InstructionWithData<ReadonlyUint8Array>
 ): ParsedIncreaseCounterInstruction<TProgram, TAccountMetas> {
 	if (instruction.accounts.length < 1) {
-		// TODO: Coded error.
-		throw new Error("Not enough accounts")
+		throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+			actualAccountMetas: instruction.accounts.length,
+			expectedAccountMetas: 1
+		})
 	}
 	let accountIndex = 0
 	const getNextAccount = () => {

@@ -9,7 +9,7 @@ use pinocchio_system::instructions::CreateAccount;
 
 use crate::accounts::Meme;
 
-pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult {
+pub fn process(program_id: &Address, accounts: &mut [AccountView]) -> ProgramResult {
     let [payer, meme, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -32,7 +32,10 @@ pub fn process(program_id: &Address, accounts: &[AccountView]) -> ProgramResult 
         return Err(ProgramError::IncorrectProgramId);
     };
 
-    let meme_data = Meme { bump, address: pda };
+    let meme_data = Meme {
+        bump,
+        address: pda.to_bytes(),
+    };
 
     let account_span = Meme::SPACE;
     let lamports_required = Rent::get()?.minimum_balance_unchecked(account_span);
@@ -117,6 +120,6 @@ mod test {
         let meme_data = Meme::deserialize(&mut meme.data.as_ref()).unwrap();
 
         assert_eq!(meme_data.bump, bump);
-        assert_eq!(meme_data.address, meme_addr)
+        assert_eq!(meme_data.address, meme_addr.to_bytes())
     }
 }

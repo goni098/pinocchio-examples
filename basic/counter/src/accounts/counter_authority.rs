@@ -6,8 +6,7 @@ use crate::ID;
 
 #[derive(BorshDeserialize, BorshSerialize, ShankAccount)]
 pub struct CounterAuthority {
-    #[idl_type("[u8;32]")]
-    pub authority: Address,
+    pub authority: [u8; 32],
     pub bump: u8,
     pub count: u64,
 }

@@ -1,0 +1,146 @@
+{
+	"version": "0.1.0",
+	"name": "basic_mint",
+	"instructions": [
+		{
+			"name": "CreateMint",
+			"accounts": [
+				{
+					"name": "payer",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["The payer for the mint creation"]
+				},
+				{
+					"name": "mint",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["The mint account (PDA)"]
+				},
+				{
+					"name": "tokenProgram",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["Token-2022 program"]
+				},
+				{
+					"name": "systemProgram",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["System program"]
+				}
+			],
+			"args": [
+				{
+					"name": "createMintArgs",
+					"type": {
+						"defined": "CreateMintArgs"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 0
+			}
+		},
+		{
+			"name": "TransferMint",
+			"accounts": [
+				{
+					"name": "fromTokenAccount",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Source token account"]
+				},
+				{
+					"name": "mint",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["The token mint"]
+				},
+				{
+					"name": "toTokenAccount",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Destination token account"]
+				},
+				{
+					"name": "authority",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Authority/owner of the source token account"]
+				},
+				{
+					"name": "tokenProgram",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["Token-2022 program"]
+				}
+			],
+			"args": [
+				{
+					"name": "transferMintArgs",
+					"type": {
+						"defined": "TransferMintArgs"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 1
+			}
+		}
+	],
+	"types": [
+		{
+			"name": "CreateMintArgs",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "decimals",
+						"type": "u8"
+					},
+					{
+						"name": "name",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "symbol",
+						"type": {
+							"array": ["u8", 8]
+						}
+					},
+					{
+						"name": "uri",
+						"type": {
+							"array": ["u8", 64]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "TransferMintArgs",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "amount",
+						"type": "u64"
+					},
+					{
+						"name": "decimals",
+						"type": "u8"
+					}
+				]
+			}
+		}
+	],
+	"metadata": {
+		"origin": "shank",
+		"address": "8F1XtWR4wTs37nnutBvd2MWpCTfb7XAciFYkw5XHaENj"
+	}
+}

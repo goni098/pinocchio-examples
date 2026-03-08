@@ -17,7 +17,7 @@ pub struct InitCounterAuthorityArgs {
 
 pub fn init_counter_authority(
     program_id: &Address,
-    accounts: &[AccountView],
+    accounts: &mut [AccountView],
     args: InitCounterAuthorityArgs,
 ) -> ProgramResult {
     let [payer, counter_authority, system_program] = accounts else {
@@ -45,7 +45,7 @@ pub fn init_counter_authority(
     let counter_data = CounterAuthority {
         bump,
         count: args.count,
-        authority: payer.address().clone(),
+        authority: payer.address().to_bytes(),
     };
 
     let account_span = CounterAuthority::SPACE;
@@ -135,6 +135,6 @@ mod test {
         let counter_data = CounterAuthority::deserialize(&mut counter.data.as_ref()).unwrap();
 
         assert_eq!(counter_data.count, 19);
-        assert_eq!(counter_data.authority, payer.pubkey());
+        assert_eq!(counter_data.authority, payer.pubkey().to_bytes());
     }
 }

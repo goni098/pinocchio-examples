@@ -26,12 +26,14 @@ import {
 	type ReadonlyAccount,
 	type ReadonlySignerAccount,
 	type ReadonlyUint8Array,
+	SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+	SolanaError,
 	type TransactionSigner,
 	transformEncoder,
 	type WritableAccount
 } from "@solana/kit"
+import { getAccountMetaFactory, type ResolvedInstructionAccount } from "@solana/program-client-core"
 import { COUNTER_PROGRAM_ADDRESS } from "../programs"
-import { getAccountMetaFactory, type ResolvedAccount } from "../shared"
 
 export const INIT_COUNTER_DISCRIMINATOR = 0
 
@@ -123,7 +125,10 @@ export function getInitCounterInstruction<
 		counter: { value: input.counter ?? null, isWritable: true },
 		systemProgram: { value: input.systemProgram ?? null, isWritable: false }
 	}
-	const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>
+	const accounts = originalAccounts as Record<
+		keyof typeof originalAccounts,
+		ResolvedInstructionAccount
+	>
 
 	// Original args.
 	const args = { ...input }
@@ -137,9 +142,9 @@ export function getInitCounterInstruction<
 	const getAccountMeta = getAccountMetaFactory(programAddress, "programId")
 	return Object.freeze({
 		accounts: [
-			getAccountMeta(accounts.payer),
-			getAccountMeta(accounts.counter),
-			getAccountMeta(accounts.systemProgram)
+			getAccountMeta("payer", accounts.payer),
+			getAccountMeta("counter", accounts.counter),
+			getAccountMeta("systemProgram", accounts.systemProgram)
 		],
 		data: getInitCounterInstructionDataEncoder().encode(args as InitCounterInstructionDataArgs),
 		programAddress
@@ -173,8 +178,10 @@ export function parseInitCounterInstruction<
 		InstructionWithData<ReadonlyUint8Array>
 ): ParsedInitCounterInstruction<TProgram, TAccountMetas> {
 	if (instruction.accounts.length < 3) {
-		// TODO: Coded error.
-		throw new Error("Not enough accounts")
+		throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+			actualAccountMetas: instruction.accounts.length,
+			expectedAccountMetas: 3
+		})
 	}
 	let accountIndex = 0
 	const getNextAccount = () => {

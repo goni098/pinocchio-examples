@@ -54,8 +54,8 @@ pub fn emit<E: BorshSerialize>(event: &E) -> ProgramResult {
         .encode_slice(event_bytes, &mut b64_buf)
         .map_err(|_| ProgramError::InvalidInstructionData)?;
 
-    let encoded_str = core::str::from_utf8(&b64_buf[..encoded_len])
-        .map_err(|_| ProgramError::InvalidInstructionData)?;
+    let encoded_str =
+        core::str::from_utf8(&b64_buf[..encoded_len]).map_err(|_| ProgramError::BorshIoError)?;
 
     pinocchio_log::log!("instruction data: {}", encoded_str);
 
