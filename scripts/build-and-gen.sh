@@ -15,7 +15,7 @@ echo ">>> Generating IDLs..."
 mkdir -p idl
 
 CRATE_PATHS=("basic/counter" "basic/close-account" "token/basic-mint" "token/vault")
-IDL_NAMES=("counter"         "close_account"        "basic_mint"       "transfer_mint")
+IDL_NAMES=("counter"         "close_account"        "basic_mint"       "vault")
 
 for i in "${!CRATE_PATHS[@]}"; do
     CRATE_PATH="${CRATE_PATHS[$i]}"

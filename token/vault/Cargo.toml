@@ -1,6 +1,27 @@
 [package]
-name = "transfer-mint"
+name = "vault"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["lib", "cdylib"]
+
 [dependencies]
+pinocchio = { workspace = true }
+pinocchio-pubkey = { workspace = true }
+pinocchio-system = { workspace = true }
+pinocchio-token = { workspace = true }
+pinocchio-token-2022 = { workspace = true }
+shank = { workspace = true }
+borsh = { workspace = true }
+
+shared = { path = "../../shared" }
+
+[dev-dependencies]
+litesvm = "0.10"
+solana-sdk = "3"
+solana-system-interface = "3"
+spl-token-metadata-interface = { version = "0.8" }
+spl-type-length-value = "0.9"
+spl-token-interface = "2"
+spl-token-2022-interface = "2"

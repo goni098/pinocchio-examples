@@ -35,6 +35,31 @@ Demonstrates the account lifecycle on Solana, including creation and proper acco
 
 **Location:** [`basic/close-account`](basic/close-account)
 
+### 3. Basic Mint
+
+Demonstrates SPL Token mint creation and token transfers.
+
+**Features:**
+- Creating a new SPL Token mint
+- Transferring tokens between accounts
+
+**Location:** [`token/basic-mint`](token/basic-mint)
+
+### 4. Vault AMM
+
+A constant-product automated market maker (AMM) vault that supports mixed token program pairs. Each token in a pair can independently use SPL Token or Token-2022.
+
+**Features:**
+- `CreateVault` — creates a PDA vault and seeds it with initial liquidity
+- `SwapExactIn` — swap a fixed input amount for a calculated output
+- `SwapExactOut` — swap for a fixed output amount, paying the calculated input
+- Constant-product invariant (`k = reserve_a * reserve_b`)
+- Per-token program selection (SPL Token or Token-2022) stored in vault state
+- Slippage protection on both swap directions
+- Event emission for all state changes
+
+**Location:** [`token/vault`](token/vault)
+
 ## 🏗️ Project Structure
 
 ```
@@ -43,17 +68,20 @@ pinocchio-examples/
 │   ├── counter/               # Counter program with authority
 │   └── close-account/         # Account lifecycle example
 ├── token/                     # Token-related examples
-│   ├── create-mint/
-│   └── transfer-mint/
+│   ├── basic-mint/            # SPL Token mint creation and transfers
+│   └── vault/                 # Constant-product AMM vault (SPL Token + Token-2022)
 ├── js-client/                 # Generated TypeScript clients
 │   ├── counter/              # Counter program client
-│   └── close-account/        # Close account program client
+│   ├── close-account/        # Close account program client
+│   ├── basic-mint/           # Basic mint program client
+│   └── vault/                # Vault AMM program client
 ├── spec/                      # Test specifications
 │   ├── counter/
 │   └── close-acount/
 ├── idl/                       # Program IDLs
 ├── deploy/                    # Deployment configurations
-└── shared/                    # Shared Rust utilities
+├── scripts/                   # Build and codegen scripts
+└── shared/                    # Shared Rust utilities (token helpers, events)
 ```
 
 ## 🛠️ Prerequisites
@@ -175,6 +203,7 @@ pnpm run clean
 
 - **Counter Program**: `8F1XtWR4wTs37nnutBvd2MWpCTfb7XAciFYkw5XHaENj`
 - **Close Account Program**: `2HXWQuEjgRDbNcMx3X32C1aw4fftVMHyUf9KXYyTiPiD`
+- **Vault AMM**: `9pq4Z25ahsUMFZ9TrKH1yhmibLbGkxxAdbTn7FUJ7reV`
 
 ## 📚 Resources
 

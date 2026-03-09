@@ -1,0 +1,477 @@
+{
+	"version": "0.1.0",
+	"name": "vault",
+	"instructions": [
+		{
+			"name": "CreateVault",
+			"accounts": [
+				{
+					"name": "owner",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Vault owner; pays for account creation and provides initial liquidity"]
+				},
+				{
+					"name": "vault",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Vault PDA (seeds: ['vault', owner, vault_id])"]
+				},
+				{
+					"name": "userTokenAccountA",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Owner's token A account"]
+				},
+				{
+					"name": "userTokenAccountB",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Owner's token B account"]
+				},
+				{
+					"name": "vaultTokenAccountA",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Vault's token A account (authority = vault PDA)"]
+				},
+				{
+					"name": "vaultTokenAccountB",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Vault's token B account (authority = vault PDA)"]
+				},
+				{
+					"name": "tokenProgramA",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["SPL Token or Token-2022 program for mint A"]
+				},
+				{
+					"name": "tokenProgramB",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["SPL Token or Token-2022 program for mint B"]
+				},
+				{
+					"name": "systemProgram",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["System program"]
+				}
+			],
+			"args": [
+				{
+					"name": "createVaultArgs",
+					"type": {
+						"defined": "CreateVaultArgs"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 0
+			}
+		},
+		{
+			"name": "SwapExactIn",
+			"accounts": [
+				{
+					"name": "user",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Signer and authority of user token accounts"]
+				},
+				{
+					"name": "vault",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Vault PDA"]
+				},
+				{
+					"name": "userTokenIn",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["User's source token account"]
+				},
+				{
+					"name": "vaultTokenIn",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Vault's matching source token account"]
+				},
+				{
+					"name": "userTokenOut",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["User's destination token account"]
+				},
+				{
+					"name": "vaultTokenOut",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Vault's matching destination token account"]
+				},
+				{
+					"name": "tokenProgramIn",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["SPL Token or Token-2022 program for the input token"]
+				},
+				{
+					"name": "tokenProgramOut",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["SPL Token or Token-2022 program for the output token"]
+				}
+			],
+			"args": [
+				{
+					"name": "swapExactInArgs",
+					"type": {
+						"defined": "SwapExactInArgs"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 1
+			}
+		},
+		{
+			"name": "SwapExactOut",
+			"accounts": [
+				{
+					"name": "user",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Signer and authority of user token accounts"]
+				},
+				{
+					"name": "vault",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Vault PDA"]
+				},
+				{
+					"name": "userTokenIn",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["User's source token account"]
+				},
+				{
+					"name": "vaultTokenIn",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Vault's matching source token account"]
+				},
+				{
+					"name": "userTokenOut",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["User's destination token account"]
+				},
+				{
+					"name": "vaultTokenOut",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Vault's matching destination token account"]
+				},
+				{
+					"name": "tokenProgramIn",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["SPL Token or Token-2022 program for the input token"]
+				},
+				{
+					"name": "tokenProgramOut",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["SPL Token or Token-2022 program for the output token"]
+				}
+			],
+			"args": [
+				{
+					"name": "swapExactOutArgs",
+					"type": {
+						"defined": "SwapExactOutArgs"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 2
+			}
+		}
+	],
+	"accounts": [
+		{
+			"name": "Vault",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "owner",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "vaultId",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "tokenMintA",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "tokenMintB",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "tokenAccountA",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "tokenAccountB",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "tokenProgramA",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "tokenProgramB",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "reserveA",
+						"type": "u64"
+					},
+					{
+						"name": "reserveB",
+						"type": "u64"
+					},
+					{
+						"name": "k",
+						"type": "u128"
+					},
+					{
+						"name": "bump",
+						"type": "u8"
+					}
+				]
+			}
+		}
+	],
+	"types": [
+		{
+			"name": "SwapExactInExecuted",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "vault",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "amountIn",
+						"type": "u64"
+					},
+					{
+						"name": "amountOut",
+						"type": "u64"
+					},
+					{
+						"name": "reserveA",
+						"type": "u64"
+					},
+					{
+						"name": "reserveB",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "SwapExactOutExecuted",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "vault",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "amountIn",
+						"type": "u64"
+					},
+					{
+						"name": "amountOut",
+						"type": "u64"
+					},
+					{
+						"name": "reserveA",
+						"type": "u64"
+					},
+					{
+						"name": "reserveB",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "VaultCreated",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "vault",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "owner",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "reserveA",
+						"type": "u64"
+					},
+					{
+						"name": "reserveB",
+						"type": "u64"
+					},
+					{
+						"name": "k",
+						"type": "u128"
+					}
+				]
+			}
+		},
+		{
+			"name": "CreateVaultArgs",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "vaultId",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "tokenMintA",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "tokenMintB",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "amountA",
+						"type": "u64"
+					},
+					{
+						"name": "amountB",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "SwapExactInArgs",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "amountIn",
+						"type": "u64"
+					},
+					{
+						"name": "minAmountOut",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "SwapExactOutArgs",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "amountOut",
+						"type": "u64"
+					},
+					{
+						"name": "maxAmountIn",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "VaultEvent",
+			"type": {
+				"kind": "enum",
+				"variants": [
+					{
+						"name": "VaultCreated",
+						"fields": [
+							{
+								"defined": "VaultCreated"
+							}
+						]
+					},
+					{
+						"name": "SwapExactInExecuted",
+						"fields": [
+							{
+								"defined": "SwapExactInExecuted"
+							}
+						]
+					},
+					{
+						"name": "SwapExactOutExecuted",
+						"fields": [
+							{
+								"defined": "SwapExactOutExecuted"
+							}
+						]
+					}
+				]
+			}
+		}
+	],
+	"metadata": {
+		"origin": "shank",
+		"address": "9pq4Z25ahsUMFZ9TrKH1yhmibLbGkxxAdbTn7FUJ7reV"
+	}
+}

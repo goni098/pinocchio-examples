@@ -17,7 +17,7 @@ const OUTPUT_MAP = {
 	counter: "counter",
 	close_account: "close-account",
 	basic_mint: "basic-mint",
-	transfer_mint: "vault"
+	vault: "vault"
 }
 
 const idlFiles = readdirSync(IDL_DIR).filter(f => f.endsWith(".json"))

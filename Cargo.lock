@@ -2165,6 +2165,8 @@ dependencies = [
  "borsh",
  "pinocchio 0.10.2",
  "pinocchio-log",
+ "pinocchio-token",
+ "pinocchio-token-2022",
 ]
 
 [[package]]
@@ -4096,10 +4098,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "transfer-mint"
-version = "0.1.0"
-
-[[package]]
 name = "typenum"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4138,6 +4136,27 @@ checksum = "0200d0fc04d809396c2ad43f3c95da3582a2556eba8d453c1087f4120ee352ff"
 dependencies = [
  "fnv",
  "lazy_static",
+]
+
+[[package]]
+name = "vault"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "litesvm",
+ "pinocchio 0.10.2",
+ "pinocchio-pubkey",
+ "pinocchio-system",
+ "pinocchio-token",
+ "pinocchio-token-2022",
+ "shank",
+ "shared",
+ "solana-sdk",
+ "solana-system-interface 3.1.0",
+ "spl-token-2022-interface",
+ "spl-token-interface",
+ "spl-token-metadata-interface",
+ "spl-type-length-value",
 ]
 
 [[package]]

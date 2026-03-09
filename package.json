@@ -9,7 +9,9 @@
 		"clean": "biome check . --write --unsafe",
 		"program:gen": "rm -rf js-client/close-account && codama run --all -c codama.close-account.json && pnpm run clean",
 		"gen:idl": "shank idl -o idl -r basic/counter",
-		"deploy:program": "solana program deploy --program-id deploy/basic/close-account/program.json target/deploy/close_account.so --url devnet"
+		"deploy:close-account": "solana program deploy --program-id deploy/basic/close-account/program.json target/deploy/close_account.so --url devnet",
+		"deploy:counter": "solana program deploy --program-id deploy/basic/counter/program.json target/deploy/counter.so --url devnet",
+		"deploy:vault": "solana program deploy --program-id deploy/token/vault/program.json target/deploy/vault.so --url devnet"
 	},
 	"keywords": [],
 	"author": "",
