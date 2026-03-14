@@ -1,0 +1,648 @@
+{
+	"version": "0.1.0",
+	"name": "full_shank",
+	"instructions": [
+		{
+			"name": "InitBoard",
+			"accounts": [
+				{
+					"name": "admin",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Board administrator; pays for config creation"]
+				},
+				{
+					"name": "config",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Board config PDA (seeds: [\"board\"])"]
+				},
+				{
+					"name": "systemProgram",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["System program"]
+				}
+			],
+			"args": [
+				{
+					"name": "initBoardArgs",
+					"type": {
+						"defined": "InitBoardArgs"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 0
+			}
+		},
+		{
+			"name": "CreateProfile",
+			"accounts": [
+				{
+					"name": "payer",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Fee payer; becomes the profile authority"]
+				},
+				{
+					"name": "profile",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["User profile PDA (seeds: [\"profile\", payer])"]
+				},
+				{
+					"name": "referrer",
+					"isMut": false,
+					"isSigner": false,
+					"isOptional": true,
+					"docs": ["Optional referrer profile — omit if not using referrals"]
+				},
+				{
+					"name": "systemProgram",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["System program"]
+				}
+			],
+			"args": [
+				{
+					"name": "createProfileArgs",
+					"type": {
+						"defined": "CreateProfileArgs"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 1
+			}
+		},
+		{
+			"name": "PostMessage",
+			"accounts": [
+				{
+					"name": "author",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Message author"]
+				},
+				{
+					"name": "profile",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Author's profile PDA"]
+				},
+				{
+					"name": "post",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["New post PDA (seeds: [\"post\", author, post_count])"]
+				},
+				{
+					"name": "systemProgram",
+					"isMut": false,
+					"isSigner": false,
+					"docs": ["System program"]
+				}
+			],
+			"args": [
+				{
+					"name": "postMessageArgs",
+					"type": {
+						"defined": "PostMessageArgs"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 2
+			}
+		},
+		{
+			"name": "UpdateUsername",
+			"accounts": [
+				{
+					"name": "authority",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Profile authority (owner)"]
+				},
+				{
+					"name": "profile",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["User profile PDA to update"]
+				}
+			],
+			"args": [
+				{
+					"name": "updateUsernameArgs",
+					"type": {
+						"defined": "UpdateUsernameArgs"
+					}
+				}
+			],
+			"discriminant": {
+				"type": "u8",
+				"value": 3
+			}
+		},
+		{
+			"name": "DeletePost",
+			"accounts": [
+				{
+					"name": "authority",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Author or admin initiating the deletion"]
+				},
+				{
+					"name": "post",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["The post PDA to close"]
+				},
+				{
+					"name": "refundTo",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Destination for the reclaimed lamports"]
+				},
+				{
+					"name": "config",
+					"isMut": false,
+					"isSigner": false,
+					"isOptional": true,
+					"docs": ["Board config — required only when the caller is the admin"]
+				}
+			],
+			"args": [],
+			"discriminant": {
+				"type": "u8",
+				"value": 4
+			}
+		},
+		{
+			"name": "SuspendProfile",
+			"accounts": [
+				{
+					"name": "admin",
+					"isMut": false,
+					"isSigner": true,
+					"docs": ["Board administrator"]
+				},
+				{
+					"name": "config",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["Board config PDA (validates admin key)"]
+				},
+				{
+					"name": "profile",
+					"isMut": true,
+					"isSigner": false,
+					"docs": ["User profile to suspend"]
+				},
+				{
+					"name": "coAdmin",
+					"isMut": false,
+					"isSigner": false,
+					"isOptionalSigner": true,
+					"docs": ["Optional second admin co-signer for governance"]
+				}
+			],
+			"args": [],
+			"discriminant": {
+				"type": "u8",
+				"value": 5
+			}
+		}
+	],
+	"accounts": [
+		{
+			"name": "BoardConfig",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "admin",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "postFee",
+						"type": "u64"
+					},
+					{
+						"name": "postCount",
+						"type": "u64"
+					},
+					{
+						"name": "isPaused",
+						"type": "bool"
+					},
+					{
+						"name": "bump",
+						"type": "u8"
+					}
+				]
+			}
+		},
+		{
+			"name": "UserProfile",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "authority",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "username",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "postCount",
+						"type": "u32"
+					},
+					{
+						"name": "status",
+						"type": {
+							"defined": "UserStatus"
+						}
+					},
+					{
+						"name": "bump",
+						"type": "u8"
+					}
+				]
+			}
+		},
+		{
+			"name": "Post",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "author",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "content",
+						"type": {
+							"array": ["u8", 128]
+						}
+					},
+					{
+						"name": "replyTo",
+						"type": {
+							"option": {
+								"array": ["u8", 32]
+							}
+						}
+					},
+					{
+						"name": "status",
+						"type": {
+							"defined": "PostStatus"
+						}
+					},
+					{
+						"name": "postIndex",
+						"type": "u32"
+					},
+					{
+						"name": "bump",
+						"type": "u8"
+					}
+				]
+			}
+		}
+	],
+	"types": [
+		{
+			"name": "BoardInitialized",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "admin",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "postFee",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "ProfileCreated",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "authority",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "username",
+						"type": {
+							"array": ["u8", 32]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "UsernameUpdated",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "authority",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "newUsername",
+						"type": {
+							"array": ["u8", 32]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "MessagePosted",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "author",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "postIndex",
+						"type": "u32"
+					},
+					{
+						"name": "replyTo",
+						"type": {
+							"option": {
+								"array": ["u8", 32]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "MessageDeleted",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "post",
+						"type": {
+							"array": ["u8", 32]
+						}
+					},
+					{
+						"name": "deletedBy",
+						"type": {
+							"array": ["u8", 32]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "ProfileSuspended",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "profileAuthority",
+						"type": {
+							"array": ["u8", 32]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "InitBoardArgs",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "postFee",
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "CreateProfileArgs",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "username",
+						"type": {
+							"array": ["u8", 32]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "PostMessageArgs",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "content",
+						"type": {
+							"array": ["u8", 128]
+						}
+					},
+					{
+						"name": "replyTo",
+						"type": {
+							"option": {
+								"array": ["u8", 32]
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "UpdateUsernameArgs",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "username",
+						"type": {
+							"array": ["u8", 32]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "BoardEvent",
+			"type": {
+				"kind": "enum",
+				"variants": [
+					{
+						"name": "BoardInitialized",
+						"fields": [
+							{
+								"defined": "BoardInitialized"
+							}
+						]
+					},
+					{
+						"name": "ProfileCreated",
+						"fields": [
+							{
+								"defined": "ProfileCreated"
+							}
+						]
+					},
+					{
+						"name": "UsernameUpdated",
+						"fields": [
+							{
+								"defined": "UsernameUpdated"
+							}
+						]
+					},
+					{
+						"name": "MessagePosted",
+						"fields": [
+							{
+								"defined": "MessagePosted"
+							}
+						]
+					},
+					{
+						"name": "MessageDeleted",
+						"fields": [
+							{
+								"defined": "MessageDeleted"
+							}
+						]
+					},
+					{
+						"name": "ProfileSuspended",
+						"fields": [
+							{
+								"defined": "ProfileSuspended"
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"name": "UserStatus",
+			"type": {
+				"kind": "enum",
+				"variants": [
+					{
+						"name": "Active"
+					},
+					{
+						"name": "Suspended"
+					}
+				]
+			}
+		},
+		{
+			"name": "PostStatus",
+			"type": {
+				"kind": "enum",
+				"variants": [
+					{
+						"name": "Published"
+					},
+					{
+						"name": "Deleted"
+					}
+				]
+			}
+		}
+	],
+	"errors": [
+		{
+			"code": 0,
+			"name": "NotAdmin",
+			"msg": "Caller is not the board admin"
+		},
+		{
+			"code": 1,
+			"name": "BoardAlreadyInitialized",
+			"msg": "Board has already been initialized"
+		},
+		{
+			"code": 2,
+			"name": "BoardNotInitialized",
+			"msg": "Board has not been initialized"
+		},
+		{
+			"code": 3,
+			"name": "ProfileAlreadyExists",
+			"msg": "Profile already exists for this authority"
+		},
+		{
+			"code": 4,
+			"name": "ProfileNotFound",
+			"msg": "Profile not found for this authority"
+		},
+		{
+			"code": 5,
+			"name": "NotAuthor",
+			"msg": "Caller is not the post author"
+		},
+		{
+			"code": 6,
+			"name": "PostAlreadyDeleted",
+			"msg": "Post has already been deleted"
+		},
+		{
+			"code": 7,
+			"name": "UserSuspended",
+			"msg": "User account is suspended"
+		},
+		{
+			"code": 8,
+			"name": "NumericalOverflow",
+			"msg": "Numerical overflow"
+		}
+	],
+	"metadata": {
+		"origin": "shank",
+		"address": "FuLLShankNoteBoardProg111111111111111111111"
+	}
+}

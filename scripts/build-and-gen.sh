@@ -14,8 +14,8 @@ cargo build-sbf --workspace
 echo ">>> Generating IDLs..."
 mkdir -p idl
 
-CRATE_PATHS=("basic/counter" "basic/close-account" "token/basic-mint" "token/vault")
-IDL_NAMES=("counter"         "close_account"        "basic_mint"       "vault")
+CRATE_PATHS=("basic/counter" "basic/close-account" "basic/full-shank" "token/basic-mint" "token/vault")
+IDL_NAMES=("counter"         "close_account"        "full_shank"        "basic_mint"       "vault")
 
 for i in "${!CRATE_PATHS[@]}"; do
     CRATE_PATH="${CRATE_PATHS[$i]}"

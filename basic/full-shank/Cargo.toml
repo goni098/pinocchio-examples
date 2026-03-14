@@ -1,0 +1,26 @@
+[package]
+name = "full-shank"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+pinocchio = { workspace = true }
+pinocchio-pubkey = { workspace = true }
+pinocchio-system = { workspace = true }
+pinocchio-log = { workspace = true }
+shank = { workspace = true }
+borsh = { workspace = true }
+base64 = { workspace = true }
+thiserror = "2"
+num-derive = "0.4"
+num-traits = { version = "0.2", default-features = false }
+
+shared = { path = "../../shared" }
+
+[dev-dependencies]
+litesvm = "0.10"
+solana-sdk = "3"
+solana-system-interface = "3"
